@@ -5,6 +5,10 @@ name = "pypi"
 
 [packages]
 pandas = "*"
+requests = "*"
+"beautifulsoup4" = "*"
+lxml = "*"
+selenium = "*"
 
 [dev-packages]
 
