@@ -300,7 +300,7 @@ def get_scrape_flg(school_dict, DoE_base_url):
 
 def check_enrollment(school_dict, DoE_base_url):
     
-    dbn = school['dbn']    
+    dbn = school_dict['dbn']    
     school_url = DoE_base_url.format(year=2017, dbn=dbn)
 
     browser = webdriver.Chrome()
