@@ -1,6 +1,6 @@
 import os
 import sys
-
+import pandas as pd
 from nyt_shsat_article import nyt_web_scrape
 from nyc_dept_of_ed import dept_of_ed_web_scrape
 
