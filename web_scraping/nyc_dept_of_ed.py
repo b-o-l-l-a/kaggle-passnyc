@@ -8,7 +8,7 @@ from selenium import webdriver
 import time
 import math
 
-wait_time_after_click = 0.25
+wait_time_after_click = 0.5
 wait_time_after_exception = 30
 
 def dept_of_ed_web_scrape(school_df, data_dir, start_idx = 0 , debug_flg = False):
@@ -58,8 +58,8 @@ def get_school_info(school, DoE_base_url):
             
         time.sleep(wait_time_after_click)
 
-        school_row_dict = get_student_achievement_stats(browser, school_row_dict)
-        school_row_dict = get_student_characteristic_stats(browser, school_row_dict)
+        school_row_dict = get_student_achievement_stats(browser, school_row_dict, year)
+        school_row_dict = get_student_characteristic_stats(browser, school_row_dict, year)
 
     return school_row_dict
 
@@ -70,14 +70,14 @@ def uncollapse_all(browser):
             collapsible_content[x].click()
             time.sleep(wait_time_after_click)
 
-def get_student_characteristic_stats(browser, school_row_dict):
+def get_student_characteristic_stats(browser, school_row_dict, year):
     
     browser.find_element_by_id('tab-stu-pop').click()
     time.sleep(wait_time_after_click)
 
-    uncollapse_all_content()
+    uncollapse_all(browser)
 
-    student_characteristic_soup = BeautifulSoup(driver.page_source, "lxml") 
+    student_characteristic_soup = BeautifulSoup(browser.page_source, "lxml") 
 
     enrollment_section = student_characteristic_soup.find(id="pop-eot")
     enrollment_content = enrollment_section.find(class_="osp-collapsible-content-wrapper")
@@ -106,7 +106,7 @@ def get_student_characteristic_stats(browser, school_row_dict):
                 if enrollment_yr in [2015, 2016, 2017]:
                     school_row_dict["grade_{}_{}_enrollment".format(grade, enrollment_yr)] = child.string
 
-    addtl_resources_section = school_yr_soup.find(id="pop-hns")
+    addtl_resources_section = student_characteristic_soup.find(id="pop-hns")
     addtl_resources_content = addtl_resources_section.find(class_="cat-collapsibles")
     addtl_resources_name_dict = {
         "Students in Families Eligible for HRA Assistance" : "pct_hra_assistance",
@@ -153,7 +153,7 @@ def get_student_characteristic_stats(browser, school_row_dict):
                 school_row_dict["{}_{}_city_diff".format(stat_col, year)] = subcat_section_city_diff
 
 
-    incoming_proficiency = school_yr_soup.find(id="pop-ipl")
+    incoming_proficiency = student_characteristic_soup.find(id="pop-ipl")
     ipl_content = incoming_proficiency.find(class_="cat-collapsibles")
 
     for ipl in ipl_content.children:
@@ -190,12 +190,12 @@ def get_student_characteristic_stats(browser, school_row_dict):
         time.sleep(wait_time_after_click)
     return school_row_dict
 
-def get_student_achievement_stats(browser, school_row_dict):
+def get_student_achievement_stats(browser, school_row_dict, year):
     
     browser.find_element_by_id('tab-stu-achieve').click()
     time.sleep(wait_time_after_click)
 
-    uncollapse_all_content()
+    uncollapse_all(browser)
     
     sa_soup = BeautifulSoup(browser.page_source, "lxml") 
 
@@ -305,7 +305,9 @@ def check_enrollment(school_dict, DoE_base_url):
 
     browser = webdriver.Chrome()
     browser.get(school_url)
+    
     browser.find_element_by_class_name('introjs-skipbutton').click()
+    time.sleep(wait_time_after_click)
 
     browser.find_element_by_id('tab-stu-pop').click()
     time.sleep(wait_time_after_click)
