@@ -54,7 +54,68 @@ def nyt_web_scrape(data_dir):
         output_df = output_df.append(school_dict, ignore_index = True)
 
     
+    merged_df = merge_w_explorer_data(output_df, data_dir)
     print("-- dropping NYT article CSV to {}".format(csv_drop_path))
-    output_df.to_csv(csv_drop_path, index = False)
+    merged_df.to_csv(csv_drop_path, index = False)
 
-    return output_df
+    return merged_df
+
+def merge_w_explorer_data(nyt_df, data_dir):
+
+    school_explorer_df = pd.read_csv("{}/archive/2016 School Explorer.csv".format(data_dir))
+    
+    nyt_df[["num_testtakers", "num_offered"]] = nyt_df[["num_testtakers", "num_offered"]].replace(to_replace="—",value=0)
+    nyt_df["pct_8th_graders_offered"] = nyt_df["pct_8th_graders_offered"].replace(to_replace="—",value="0%")
+    
+    school_explorer_df_cols_to_keep = [
+        'School Name',
+        'SED Code',
+        'Location Code',
+        'District',
+        'Latitude',
+        'Longitude',
+        'Address (Full)',
+        'City',
+        'Zip',
+        'Grades',
+        'Grade Low',
+        'Grade High',
+        'Community School?',
+        'Economic Need Index',
+        'School Income Estimate',
+        'Percent ELL',
+        'Percent Asian',
+        'Percent Black',
+        'Percent Hispanic',
+        'Percent Black / Hispanic',
+        'Percent White',
+        'Student Attendance Rate',
+        'Percent of Students Chronically Absent',
+        'Rigorous Instruction %',
+        'Rigorous Instruction Rating',
+        'Collaborative Teachers %',
+        'Collaborative Teachers Rating',
+        'Supportive Environment %',
+        'Supportive Environment Rating',
+        'Effective School Leadership %',
+        'Effective School Leadership Rating',
+        'Strong Family-Community Ties %',
+        'Strong Family-Community Ties Rating',
+        'Trust %',
+        'Trust Rating',
+        'Student Achievement Rating',
+        'Average ELA Proficiency',
+        'Average Math Proficiency'
+    ]
+
+    trimmed_school_explorer_df = school_explorer_df[school_explorer_df_cols_to_keep]
+    
+    merged_df = pd.merge(nyt_df, trimmed_school_explorer_df, left_on="dbn", right_on="Location Code", how="outer")
+    
+    # combine school_name column from nyt and school explorer data
+    merged_df['school_name'] = np.where(merged_df['school_name'].isnull(), merged_df['School Name'], merged_df['school_name'])
+    merged_df['dbn'] = np.where(merged_df['dbn'].isnull(), merged_df['Location Code'], merged_df['dbn'])
+
+    merged_df = merged_df.drop(['School Name', 'Location Code'], axis=1)
+
+    return merged_df
