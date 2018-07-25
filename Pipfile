@@ -9,6 +9,12 @@ requests = "*"
 "beautifulsoup4" = "*"
 lxml = "*"
 selenium = "*"
+ipykernel = "*"
+jupyter = "*"
+matplotlib = "*"
+sklearn = "*"
+scipy = "*"
+statsmodels = "*"
 
 [dev-packages]
 
