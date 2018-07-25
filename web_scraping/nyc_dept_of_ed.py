@@ -8,7 +8,7 @@ from selenium import webdriver
 import time
 import math
 
-wait_time_after_click = 0.5
+wait_time_after_click = 1
 wait_time_after_exception = 30
 
 def dept_of_ed_web_scrape(school_df, data_dir, start_idx = 0 , debug_flg = False):
@@ -20,18 +20,18 @@ def dept_of_ed_web_scrape(school_df, data_dir, start_idx = 0 , debug_flg = False
 
     DoE_base_url = "https://tools.nycenet.edu/guide/{year}/#dbn={dbn}&report_type=EMS"
 
-    for idx, school in school_df[start_idx:].iterrows():
+    for idx, school in school_df[int(start_idx):].iterrows():
 
         scrape_school_flg = get_scrape_flg(school, DoE_base_url)
 
         if scrape_school_flg == False: 
             continue
         
-        row_dict = get_school_info(school, DoE_base_url)
+        row_dict = get_school_info(school, DoE_base_url, idx)
         output_df = output_df.append(row_dict, ignore_index=True)
         output_df.to_csv("{data_dir}/in_flight_doe_data.csv".format(**locals()),index=False)
-
-def get_school_info(school, DoE_base_url):
+    output_df.to_csv("{data_dir}/final_modeling_data.csv")
+def get_school_info(school, DoE_base_url, idx):
     
     years_to_scrape = [2016, 2017]
     school_row_dict = school
@@ -41,7 +41,7 @@ def get_school_info(school, DoE_base_url):
 
     browser = webdriver.Chrome()
 
-    print("-{}".format(school_name))
+    print("school: {} / index: {}".format(school_name, idx))
     for year in years_to_scrape:
         school_url = DoE_base_url.format(year=year, dbn=dbn)
         print("--{}".format(school_url))
