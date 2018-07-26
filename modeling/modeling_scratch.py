@@ -39,6 +39,73 @@ def clean_rows_and_cols(df):
     
     df = df.dropna(axis=0, subset=["grade_8_2017_enrollment"])
 
+    #use config to pull years. create var that has list of possible scores (i.e., 1-4)
+    incoming_state_score_cols = [
+        "incoming_ela_level_1_2016_n",
+        "incoming_ela_level_1_2017_n",
+        "incoming_ela_level_2_2016_n",
+        "incoming_ela_level_2_2017_n",
+        "incoming_ela_level_3_2016_n",
+        "incoming_ela_level_3_2017_n",
+        "incoming_ela_level_4_2016_n",
+        "incoming_ela_level_4_2017_n",
+        "incoming_math_level_1_2016_n",
+        "incoming_math_level_1_2017_n",
+        "incoming_math_level_2_2016_n",
+        "incoming_math_level_2_2017_n",
+        "incoming_math_level_3_2016_n",
+        "incoming_math_level_3_2017_n",
+        "incoming_math_level_4_2016_n",
+        "incoming_math_level_4_2017_n"
+    ]
+
+    for state_score_col in incoming_state_score_cols:
+        df[state_score_col] = df[state_score_col].replace(to_replace="N < 5", value=0)
+        df[state_score_col] = df[state_score_col].astype('float')
+
+    df = create_dummy_vars(df)
+
+    return df
+
+def create_dummy_vars(df):
+
+    # might want to handle var City. Grouping uncommon City vals together
+    categorical_cols = [
+        "Community School?",
+        "Rigorous Instruction Rating",
+        "Collaborative Teachers Rating",
+        "Supportive Environment Rating",
+        "Effective School Leadership Rating",
+        "Strong Family-Community Ties Rating",
+        "Trust Rating",
+        "Student Achievement Rating"
+    ]
+
+    ref_val_dict = {
+        "Rigorous Instruction Rating" : "Meeting Target",
+        "Collaborative Teachers Rating" : "Meeting Target",
+        "Supportive Environment Rating" : "Meeting Target",
+        "Effective School Leadership Rating" : "Meeting Target",
+        "Strong Family-Community Ties Rating" : "Meeting Target",
+        "Trust Rating" : "Meeting Target",
+        "Student Achievement Rating" : "Meeting Target"
+    }
+    for cat_col in categorical_cols:
+        print("--{}--".format(cat_col))
+        dummy_df = pd.get_dummies(df[cat_col], prefix=cat_col, dummy_na=True)
+        dummy_df = dummy_df.astype('float')
+        print(dummy_df.columns.values)
+        print(df.head())
+        df = pd.concat([df, dummy_df], axis=1)
+
+        drop_val = ref_val_dict.get(cat_col, None)
+        if drop_val is None:
+            drop_val = df.groupby([cat_col]).size().idxmax()
+        
+        drop_col = "{}_{}".format(cat_col, drop_val)
+        
+        df = df.drop(drop_col, axis=1)
+
     return df
 
 def find_grade_8_flg(df):
