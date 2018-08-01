@@ -21,12 +21,12 @@ def scratch(col_idx):
     disaggregation_vars = ["District","City", "Zip", "Grades", "Community School?"]
     # list of columns that are categorical in school_explorer_df that need to be xformed to float
     perc_transform_vars = ["Percent ELL", "Percent Asian", "Percent Black", "Percent Hispanic" \
-                        "Percent Black / Hispanic", "Percent White", "Student Attendance Rate", \
-                        "Percent of Students Chronically Absent", "Rigorous Instruction %", \
-                        "Collaborative Teachers %", "Supportive Environment %", "Effective School Leadership %", \
-                        "Strong Family-Community Ties %", \
-                        "Strong Family-Community Ties Rating", "Trust %"
-                        ]
+            "Percent Black / Hispanic", "Percent White", "Student Attendance Rate", \
+            "Percent of Students Chronically Absent", "Rigorous Instruction %", \
+            "Collaborative Teachers %", "Supportive Environment %", "Effective School Leadership %", \
+            "Strong Family-Community Ties %", \
+            "Strong Family-Community Ties Rating", "Trust %"
+            ]
 
     col_name = school_explorer_df_cols[col_idx]
     print("****{}".format(col_name))

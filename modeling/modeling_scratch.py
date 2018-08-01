@@ -1,6 +1,7 @@
 import pandas as pd
 import re
 import numpy as np
+import geopy.distance
 
 def modeling_scratch():
     data_dir = "/Users/greg.bolla/Desktop/git-projects/kaggle-passnyc/data"
@@ -8,12 +9,66 @@ def modeling_scratch():
 
     cleaned_df = clean_percentage_cols(merged_df)
     cleaned_df = find_grade_8_flg(cleaned_df)
-    #cleaned_df = get_addtl_columns(cleaned_df)
     cleaned_df = clean_rows_and_cols(cleaned_df)
+    cleaned_df = get_addtl_columns(cleaned_df)
 
     cleaned_df.to_csv("{}/cleaned_modeling_data.csv".format(data_dir), index=False)
 
     return
+
+def get_addtl_columns(df):
+
+    binary_cols = {"econ_need_index_2017_city_diff" : 0}
+
+    for col_to_xfrom, cutoff in binary_cols.items():
+        new_col_name = "{}_binary".format(col_to_xfrom)
+        df[new_col_name] = np.nan
+        df[new_col_name] = np.where(df[col_to_xfrom].astype(float) >= cutoff, True, False)
+
+    perc_testtakers = df["num_testtakers"].astype(float) / df["grade_8_2017_enrollment"].astype(float)
+    df["perc_testtakers"] = perc_testtakers
+    perc_testtakers_quantiles = perc_testtakers.quantile([0.25, 0.5, 0.75])
+    quartile_1_max = perc_testtakers_quantiles[0.25]
+    quartile_2_max = perc_testtakers_quantiles[0.5]
+    quartile_3_max = perc_testtakers_quantiles[0.75]
+
+    df["perc_testtakers_quartile"] = np.nan
+    df["perc_testtakers_quartile"] = np.where(df["perc_testtakers"] <= quartile_1_max, 1, df["perc_testtakers_quartile"])
+    df["perc_testtakers_quartile"] = np.where(
+        (df["perc_testtakers"] > quartile_1_max) & (df["perc_testtakers"] <= quartile_2_max), 
+        2, df["perc_testtakers_quartile"])
+    df["perc_testtakers_quartile"] = np.where(
+        (df["perc_testtakers"] > quartile_2_max) & (df["perc_testtakers"] <= quartile_3_max), 
+        3, df["perc_testtakers_quartile"])
+    df["perc_testtakers_quartile"] = np.where(df["perc_testtakers"] > quartile_3_max, 4, df["perc_testtakers_quartile"])
+
+    dist_df = df.apply(get_dist_from_specialized_schools, axis=1)
+    df = pd.concat([df, dist_df], axis=1)
+
+    return df
+
+def get_dist_from_specialized_schools(row):
+   
+    row_long_lat = (float(row['Latitude']), float(row['Longitude']))
+
+    specialized_school_long_lat = {
+        "bronx_hs_of_science" : (40.87833, -73.89083),
+        "brooklyn_latin_school" : (40.705, -73.9388889),
+        "brooklyn_tech_hs" : (40.6888889, -73.9766667),
+        "hs_for_math_sci_eng" : (40.8215, -73.9490),
+        "hs_of_amer_studies" : (40.8749, -73.8952),
+        "queens_hs_for_sci": (40.699, -73.797),
+        "staten_island_tech" : (40.5676, -74.1181),
+        "stuyvesant_hs" : (40.7178801, -74.0137509)
+    }
+    
+
+    row = {}
+    for specialized_school, specialized_long_lat in specialized_school_long_lat.items():
+        row["dist_to_{}".format(specialized_school)] = geopy.distance.vincenty(row_long_lat, specialized_long_lat).miles       
+
+    row["min_dist_to_specialized_school"] = row[min(row, key=row.get)]
+    return pd.Series(row)
 
 def clean_rows_and_cols(df):
 
@@ -91,11 +146,9 @@ def create_dummy_vars(df):
         "Student Achievement Rating" : "Meeting Target"
     }
     for cat_col in categorical_cols:
-        print("--{}--".format(cat_col))
+
         dummy_df = pd.get_dummies(df[cat_col], prefix=cat_col, dummy_na=True)
         dummy_df = dummy_df.astype('float')
-        print(dummy_df.columns.values)
-        print(df.head())
         df = pd.concat([df, dummy_df], axis=1)
 
         drop_val = ref_val_dict.get(cat_col, None)
