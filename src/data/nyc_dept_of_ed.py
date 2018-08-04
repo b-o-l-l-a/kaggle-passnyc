@@ -8,15 +8,16 @@ from selenium import webdriver
 import time
 import math
 
-wait_time_after_click = 1
+wait_time_after_click = 0.5
 wait_time_after_exception = 30
 
 def dept_of_ed_web_scrape(school_df, data_dir, start_idx = 0 , debug_flg = False):
 
+    print("\n*****scraping NYC DOE")
     if debug_flg == False:
         output_df = pd.DataFrame()
     else:
-        output_df = pd.read_csv("{data_dir}/in_flight_doe_data.csv".format(**locals()))
+        output_df = pd.read_csv("{data_dir}/step2_in_flight_doe_data.csv".format(**locals()))
 
     DoE_base_url = "https://tools.nycenet.edu/guide/{year}/#dbn={dbn}&report_type=EMS"
 
@@ -29,11 +30,12 @@ def dept_of_ed_web_scrape(school_df, data_dir, start_idx = 0 , debug_flg = False
         
         row_dict = get_school_info(school, DoE_base_url, idx)
         output_df = output_df.append(row_dict, ignore_index=True)
-        output_df.to_csv("{data_dir}/in_flight_doe_data.csv".format(**locals()),index=False)
-    output_df.to_csv("{data_dir}/final_modeling_data.csv")
+        output_df.to_csv("{data_dir}/step2_in_flight_doe_nyt_data.csv".format(**locals()),index=False)
+    output_df.to_csv("{data_dir}/step2_final_doe_nyt_data.csv")
+    
 def get_school_info(school, DoE_base_url, idx):
     
-    years_to_scrape = [2016, 2017]
+    years_to_scrape = [2017]
     school_row_dict = school
 
     school_name = school['school_name']
@@ -41,6 +43,8 @@ def get_school_info(school, DoE_base_url, idx):
 
     browser = webdriver.Chrome()
 
+    # if there's an issue scraping data from a particular school, 
+    # you can just pass in the index and process will continue from there
     print("school: {} / index: {}".format(school_name, idx))
     for year in years_to_scrape:
         school_url = DoE_base_url.format(year=year, dbn=dbn)
@@ -103,7 +107,7 @@ def get_student_characteristic_stats(browser, school_row_dict, year):
                 class_yr = int(class_yr_str.split('yr-')[-1])
                 enrollment_yr = year - class_yr
 
-                if enrollment_yr in [2015, 2016, 2017]:
+                if enrollment_yr == year:
                     school_row_dict["grade_{}_{}_enrollment".format(grade, enrollment_yr)] = child.string
 
     addtl_resources_section = student_characteristic_soup.find(id="pop-hns")

@@ -7,9 +7,9 @@ import re
 
 def nyt_web_scrape(data_dir):
 
-    print("\nscraping NYT article with SHSAT stats")
+    print("\n*****scraping NYT article with SHSAT stats")
     nyt_schools_url = "https://www.nytimes.com/interactive/2018/06/29/nyregion/nyc-high-schools-middle-schools-shsat-students.html"
-    csv_drop_path = "{}/nyt_shsat_article_data.csv".format(data_dir)
+    csv_drop_path = "{}/step1_nyt_shsat_article_data.csv".format(data_dir)
     
     schools_html = requests.get(nyt_schools_url, verify=False).content
     schools_html = schools_html.decode("utf-8")
@@ -62,7 +62,9 @@ def nyt_web_scrape(data_dir):
 
 def merge_w_explorer_data(nyt_df, data_dir):
 
-    school_explorer_df = pd.read_csv("{}/archive/2016 School Explorer.csv".format(data_dir))
+    school_explorer_path = data_dir.replace('external', 'raw')
+    print(school_explorer_path)
+    school_explorer_df = pd.read_csv("{}/2016 School Explorer.csv".format(school_explorer_path))
     
     nyt_df[["num_testtakers", "num_offered"]] = nyt_df[["num_testtakers", "num_offered"]].replace(to_replace="—",value=0)
     nyt_df["pct_8th_graders_offered"] = nyt_df["pct_8th_graders_offered"].replace(to_replace="—",value="0%")
