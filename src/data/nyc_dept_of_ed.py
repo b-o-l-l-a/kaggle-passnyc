@@ -17,7 +17,8 @@ def dept_of_ed_web_scrape(school_df, data_dir, start_idx = 0 , debug_flg = False
     if debug_flg == False:
         output_df = pd.DataFrame()
     else:
-        output_df = pd.read_csv("{data_dir}/step2_in_flight_doe_data.csv".format(**locals()))
+        output_df = pd.read_csv("{data_dir}/step2_in_flight_doe_nyt_data.csv".format(**locals()))
+        output_df = output_df.drop_duplicates()
 
     DoE_base_url = "https://tools.nycenet.edu/guide/{year}/#dbn={dbn}&report_type=EMS"
 
@@ -27,11 +28,11 @@ def dept_of_ed_web_scrape(school_df, data_dir, start_idx = 0 , debug_flg = False
 
         if scrape_school_flg == False: 
             continue
-        
+
         row_dict = get_school_info(school, DoE_base_url, idx)
         output_df = output_df.append(row_dict, ignore_index=True)
         output_df.to_csv("{data_dir}/step2_in_flight_doe_nyt_data.csv".format(**locals()),index=False)
-    output_df.to_csv("{data_dir}/step2_final_doe_nyt_data.csv")
+    output_df.to_csv("{data_dir}/step2_final_doe_nyt_data.csv".format(**locals()),index=False)
     
 def get_school_info(school, DoE_base_url, idx):
     
@@ -49,7 +50,7 @@ def get_school_info(school, DoE_base_url, idx):
     for year in years_to_scrape:
         school_url = DoE_base_url.format(year=year, dbn=dbn)
         print("--{}".format(school_url))
-
+        
         try:
             browser.get(school_url)
             browser.find_element_by_class_name('introjs-skipbutton').click()
@@ -64,7 +65,8 @@ def get_school_info(school, DoE_base_url, idx):
 
         school_row_dict = get_student_achievement_stats(browser, school_row_dict, year)
         school_row_dict = get_student_characteristic_stats(browser, school_row_dict, year)
-
+        
+    browser.quit()
     return school_row_dict
 
 def uncollapse_all(browser):
@@ -210,6 +212,8 @@ def get_student_achievement_stats(browser, school_row_dict, year):
         "Black" : "black",
         "Multiracial" : "multiracial",
         "American Indian" : "amer_indian",
+        "ELA - Average Student Proficiency" : "avg_ela_proficiency",
+        "ELA - Percentage of Students at Level 3 or 4" : "pct_ela_level_3_or_4",
         "Math - Average Student Proficiency" : "avg_math_proficiency",
         "Math - Percentage of Students at Level 3 or 4" : "pct_math_level_3_or_4",
         "Percent of 8th Graders Earning HS Credit" : "pct_8th_graders_w_hs_credit"
@@ -284,6 +288,7 @@ def get_student_achievement_stats(browser, school_row_dict, year):
 
 def get_scrape_flg(school_dict, DoE_base_url):
 
+    
     if isinstance(school_dict['Grades'], float) and math.isnan(school_dict['Grades']):
         return False
 
@@ -299,7 +304,14 @@ def get_scrape_flg(school_dict, DoE_base_url):
         return False
 
     else:
-        scrape_flg = check_enrollment(school_dict, DoE_base_url)
+        try:
+            scrape_flg = check_enrollment(school_dict, DoE_base_url)
+        except Exception as e:
+            if type(e).__name__ == "NoSuchElementException":
+                url = DoE_base_url.format(year=2017, dbn=school_dict["dbn"])
+                print("{} does not have data, returning False for scrape_flg".format(url))
+                scrape_flg = False
+                
         return scrape_flg
 
 def check_enrollment(school_dict, DoE_base_url):
