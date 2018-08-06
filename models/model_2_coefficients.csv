@@ -1,0 +1,6 @@
+model_2_pred_name,model_2_coef
+Average ELA Proficiency_stdized,0.06867396950376944
+pct_math_level_3_or_4_2017_city_diff_stdized,0.09288408323687745
+sa_attendance_90plus_2017_stdized,0.011625388222426179
+pct_8th_graders_w_hs_credit_2017_city_diff_stdized,0.014127318004576334
+min_dist_to_big_three_stdized,-0.03650206615480861
