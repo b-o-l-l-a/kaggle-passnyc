@@ -44,20 +44,30 @@ def create_final_model(input_data_dir, output_data_dir, output_model_summaries_d
     stdized_model_2_train, stdized_model_2_test = standardize_cols(model_2_train_pred_df, model_2_test_pred_df)
     
     model_1 = linear_model.LinearRegression().fit(stdized_model_1_train, model_1_response_train[response_var])
+    model_1_train_predicted = model_1.predict(stdized_model_1_train) 
     model_1_test_predicted = model_1.predict(stdized_model_1_test)
+    model_1_response_train["predicted_perc_testtakers"] = model_1_train_predicted
     model_1_response_test["predicted_perc_testtakers"] = model_1_test_predicted
     model_1_coefficients = pd.concat([pd.DataFrame(stdized_model_1_train.columns),pd.DataFrame(np.transpose(model_1.coef_))], axis = 1)
     model_1_coefficients.columns = ["model_1_pred_name", "model_1_coef"]
+    model_1_full_train_df = pd.concat([model_1_response_train, stdized_model_1_train], axis = 1)
+    model_1_full_test_df = pd.concat([model_1_response_test, stdized_model_1_test], axis = 1)
 
     model_2 = linear_model.LinearRegression().fit(stdized_model_2_train, model_2_response_train[response_var])
+    model_2_train_predicted = model_1.predict(stdized_model_2_train) 
     model_2_test_predicted = model_2.predict(stdized_model_2_test)
+    model_2_response_train["predicted_perc_testtakers"] = model_2_train_predicted
     model_2_response_test["predicted_perc_testtakers"] = model_2_test_predicted
     model_2_coefficients = pd.concat([pd.DataFrame(stdized_model_2_train.columns),pd.DataFrame(np.transpose(model_2.coef_))], axis = 1)
     model_2_coefficients.columns = ["model_2_pred_name", "model_2_coef"]
+    model_2_full_train_df = pd.concat([model_2_response_train, stdized_model_2_train], axis = 1)
+    model_2_full_test_df = pd.concat([model_2_response_test, stdized_model_2_test], axis = 1)
     
-    final_test_set =  pd.concat([model_1_response_test, model_2_response_test])
+    final_train_set = pd.concat([model_1_full_train_df, model_2_full_train_df])
+    final_test_set =  pd.concat([model_1_full_test_df, model_2_full_test_df])
 
-    final_test_set.to_csv("{}/predictions_by_school.csv".format(output_model_summaries_dir), index = False)
+    final_train_set.to_csv("{}/full_train_dataset.csv".format(output_data_dir), index = False)
+    final_test_set.to_csv("{}/full_test_dataset.csv".format(output_data_dir), index = False)
     model_1_coefficients.to_csv("{}/model_1_coefficients.csv".format(output_model_summaries_dir), index = False)
     model_2_coefficients.to_csv("{}/model_2_coefficients.csv".format(output_model_summaries_dir), index = False)
     
