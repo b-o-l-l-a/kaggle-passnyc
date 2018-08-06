@@ -1,16 +1,16 @@
 import os
 import sklearn
 import pandas as pd
-#import statsmodels.api as sm
-#from statsmodels.regression.linear_model import RegressionResults
+from sklearn.model_selection import train_test_split
+from sklearn import linear_model, metrics
 
-from model_utils import get_pred_and_response_dfs
+from model_utils import get_pred_and_response_dfs, adj_r2_score
 
 def create_single_regressors(input_data_dir, output_data_dir, output_model_summaries_dir):
 
     interim_modeling_df = pd.read_csv("{}/step3_interim_modeling_data.csv".format(input_data_dir))
 
-    pred_df, response_df, invalid_preds = get_pred_and_response_dfs(interim_modeling_df)
+    pred_df, response_df, invalid_preds, response_var = get_pred_and_response_dfs(interim_modeling_df)
    
     pred_train, pred_test, response_train, response_test = train_test_split(pred_df, response_df, test_size=0.25, random_state=223)
 
@@ -24,7 +24,8 @@ def create_single_regressors(input_data_dir, output_data_dir, output_model_summa
             pred_rows = get_single_regressor_model(col, pred_train, response_train, pred_test, response_test, response_var, categorical)
             single_regression_df = single_regression_df.append(pred_rows, ignore_index=True)
             
-
+    single_regression_df_cols = ["model", "categorical", "model_r2", "model_adj_r2", "median_absolute_error", "pred_col", "pred_coef"]
+    single_regression_df = single_regression_df[single_regression_df_cols]
     output_file_path = "{}/single_regressor_summary.csv".format(output_model_summaries_dir)
     print("dropping single regression CSV to {}".format(output_file_path))
     
