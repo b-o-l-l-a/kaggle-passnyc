@@ -43,6 +43,7 @@ def get_addtl_response_vars(df):
     
     perc_testtakers = df["num_testtakers"].astype(float) / df["grade_8_2017_enrollment"].astype(float)
     df["perc_testtakers"] = perc_testtakers
+    df["perc_testtakers"] = df.apply(lambda row: 1 if row["perc_testtakers"] > 1 else row["perc_testtakers"], axis=1)
     perc_testtakers_quantiles = perc_testtakers.quantile([0.25, 0.5, 0.75])
     quartile_1_max = perc_testtakers_quantiles[0.25]
     quartile_2_max = perc_testtakers_quantiles[0.5]

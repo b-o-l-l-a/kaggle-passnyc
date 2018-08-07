@@ -16,6 +16,8 @@ sklearn = "*"
 scipy = "*"
 statsmodels = "*"
 geopy = "*"
+plotly = "*"
+"mpld3" = "*"
 
 [dev-packages]
 
