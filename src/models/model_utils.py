@@ -14,7 +14,7 @@ def get_pred_and_response_dfs(df):
     
     # incl dbn and school_name for convenience and to id each row
     # incl enrollment to calculate addtl est'd num students
-    response_df_cols = ["dbn", "school_name", "grade_8_2017_enrollment", response_var]
+    response_df_cols = [ "school_name", "dbn", "Longitude", "Latitude", response_var, "num_testtakers","grade_8_2017_enrollment", "pct_poverty_2017_val", "Percent Black / Hispanic", ]
     
     response_df = df[response_df_cols]
     pred_df = df.drop(response_df_cols, axis=1)
