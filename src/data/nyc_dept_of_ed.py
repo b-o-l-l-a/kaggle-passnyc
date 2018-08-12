@@ -44,7 +44,7 @@ def get_school_info(school, DoE_base_url, idx):
 
     browser = webdriver.Chrome()
 
-    # if there's an issue scraping data from a particular school, 
+    # if there's an issue scraping data from a particular school, (e.g., temp lose internet access) 
     # you can just pass in the index and process will continue from there
     print("school: {} / index: {}".format(school_name, idx))
     for year in years_to_scrape:
